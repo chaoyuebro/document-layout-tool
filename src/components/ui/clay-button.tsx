@@ -24,6 +24,7 @@ const ClayButton = React.forwardRef<HTMLButtonElement, ClayButtonProps>(
     }
 
     return (
+      // @ts-ignore
       <motion.button
         ref={ref}
         whileHover={{ translateY: -2, boxShadow: "0 6px 0 rgba(0,0,0,0.1)" }}

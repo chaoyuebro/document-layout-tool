@@ -9,12 +9,12 @@ import { useEditor } from '@/contexts/EditorContext';
 
 export const useImagePersistence = () => {
   const [isPersisting, setIsPersisting] = useState(false);
-  const { 
-    cardImages, 
+  const {
+    cardImages,
     cardImagesBase64,
     setCardImagesBase64,
     cardImagesMetadata,
-    setCardImagesMetadata
+    setCardImagesMetadata,
     saveProject
   } = useEditor();
 
@@ -29,15 +29,15 @@ export const useImagePersistence = () => {
 
     setIsPersisting(true);
     const toastId = toast.loading(`正在持久化 ${Object.keys(cardImages).length} 张图片...`);
-    
+
     try {
       // 1. 批量下载并转换为Base64
       const persistedData = await ImagePersistenceService.batchPersistImages(cardImages);
-      
+
       // 2. 准备存储数据
       const base64Images: Record<number, string> = {};
       const metadata: Record<number, { mimeType: string; size: number; originalUrl?: string }> = {};
-      
+
       Object.entries(persistedData).forEach(([indexStr, data]) => {
         const index = parseInt(indexStr);
         base64Images[index] = data.base64;
@@ -47,19 +47,19 @@ export const useImagePersistence = () => {
           originalUrl: data.originalUrl
         };
       });
-      
+
       // 3. 更新状态
       setCardImagesBase64(base64Images);
       setCardImagesMetadata(metadata);
-      
+
       // 4. 保存到数据库
       await saveProject({
         card_images_base64: base64Images,
         card_images_metadata: metadata
       });
-      
+
       toast.success(`✅ 成功持久化 ${Object.keys(persistedData).length} 张图片！`, { id: toastId });
-      
+
     } catch (error) {
       console.error('批量持久化失败:', error);
       toast.error(`持久化失败: ${(error as Error).message}`, { id: toastId });
@@ -79,21 +79,23 @@ export const useImagePersistence = () => {
     }
 
     const toastId = toast.loading(`正在持久化第 ${index + 1} 张图片...`);
-    
+
     try {
       const persistedData = await ImagePersistenceService.persistImage(imageUrl, index);
-      
+
       // 更新状态
       const newBase64 = { ...cardImagesBase64, [index]: persistedData.base64 };
-      const newMetadata = { ...cardImagesMetadata, [index]: {
-        mimeType: persistedData.mimeType,
-        size: persistedData.size,
-        originalUrl: persistedData.originalUrl
-      }};
-      
+      const newMetadata = {
+        ...cardImagesMetadata, [index]: {
+          mimeType: persistedData.mimeType,
+          size: persistedData.size,
+          originalUrl: persistedData.originalUrl
+        }
+      };
+
       setCardImagesBase64(newBase64);
       setCardImagesMetadata(newMetadata);
-      
+
       // 保存到数据库
       await saveProject({
         card_images_base64: { [index]: persistedData.base64 },
@@ -105,9 +107,9 @@ export const useImagePersistence = () => {
           }
         }
       });
-      
+
       toast.success(`第 ${index + 1} 张图片持久化成功！`, { id: toastId });
-      
+
     } catch (error) {
       console.error(`第 ${index + 1} 张图片持久化失败:`, error);
       toast.error(`持久化失败: ${(error as Error).message}`, { id: toastId });
